@@ -17,37 +17,39 @@ import Language.Verilog.Parser.Tokens
 
 %token
 
-"always"           { Token KW_always     _ _ }
-"assign"           { Token KW_assign     _ _ }
-"begin"            { Token KW_begin      _ _ }
-"case"             { Token KW_case       _ _ }
-"casez"            { Token KW_casez      _ _ }
-"default"          { Token KW_default    _ _ }
-"else"             { Token KW_else       _ _ }
-"end"              { Token KW_end        _ _ }
-"endcase"          { Token KW_endcase    _ _ }
-"endmodule"        { Token KW_endmodule  _ _ }
-"for"              { Token KW_for        _ _ }
-"if"               { Token KW_if         _ _ }
-"initial"          { Token KW_initial    _ _ }
-"inout"            { Token KW_inout      _ _ }
-"input"            { Token KW_input      _ _ }
-"integer"          { Token KW_integer    _ _ }
-"localparam"       { Token KW_localparam _ _ }
-"module"           { Token KW_module     _ _ }
-"negedge"          { Token KW_negedge    _ _ }
-"or"               { Token KW_or         _ _ }
-"output"           { Token KW_output     _ _ }
-"parameter"        { Token KW_parameter  _ _ }
-"posedge"          { Token KW_posedge    _ _ }
-"reg"              { Token KW_reg        _ _ }
-"wire"             { Token KW_wire       _ _ }
+"always"           { Token KW_always       _ _ }
+"assign"           { Token KW_assign       _ _ }
+"begin"            { Token KW_begin        _ _ }
+"case"             { Token KW_case         _ _ }
+"casez"            { Token KW_casez        _ _ }
+"default"          { Token KW_default      _ _ }
+"else"             { Token KW_else         _ _ }
+"end"              { Token KW_end          _ _ }
+"endcase"          { Token KW_endcase      _ _ }
+"endmodule"        { Token KW_endmodule    _ _ }
+"endprimitive"     { Token KW_endprimitive _ _ }
+"for"              { Token KW_for          _ _ }
+"if"               { Token KW_if           _ _ }
+"initial"          { Token KW_initial      _ _ }
+"inout"            { Token KW_inout        _ _ }
+"input"            { Token KW_input        _ _ }
+"integer"          { Token KW_integer      _ _ }
+"localparam"       { Token KW_localparam   _ _ }
+"module"           { Token KW_module       _ _ }
+"negedge"          { Token KW_negedge      _ _ }
+"or"               { Token KW_or           _ _ }
+"output"           { Token KW_output       _ _ }
+"primitive"        { Token KW_primitive    _ _ }
+"parameter"        { Token KW_parameter    _ _ }
+"posedge"          { Token KW_posedge      _ _ }
+"reg"              { Token KW_reg          _ _ }
+"wire"             { Token KW_wire         _ _ }
 
-simpleIdentifier   { Token Id_simple     _ _ }
-escapedIdentifier  { Token Id_escaped    _ _ }
-systemIdentifier   { Token Id_system     _ _ }
-number             { Token Lit_number    _ _ }
-string             { Token Lit_string    _ _ }
+simpleIdentifier   { Token Id_simple       _ _ }
+escapedIdentifier  { Token Id_escaped      _ _ }
+systemIdentifier   { Token Id_system       _ _ }
+number             { Token Lit_number      _ _ }
+string             { Token Lit_string      _ _ }
 
 "("                { Token Sym_paren_l _ _ }
 ")"                { Token Sym_paren_r _ _ }
@@ -157,6 +159,7 @@ Modules :: { [Module] }
 
 Module :: { Module }
 : "module" Identifier ModulePortList ";" ModuleItems "endmodule"{ Module $2 $3 $5 }
+| "primitive" Identifier ModulePortList ";" ModuleItems "endprimitive"{ Primitive $2 $3 $5 }
 
 Identifier :: { Identifier }
 : simpleIdentifier   { tokenString $1 }
@@ -333,7 +336,6 @@ Expr :: { Expr }
 | "~" Expr                    { UniOp BWNot $2 }
 | "+" Expr %prec UPlus        { UniOp UAdd $2 }
 | "-" Expr %prec UMinus       { UniOp USub $2 }
-
 
 {
 parseError :: [Token] -> a

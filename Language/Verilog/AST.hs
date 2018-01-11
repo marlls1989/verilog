@@ -23,14 +23,21 @@ import Data.BitVec
 
 type Identifier = String
 
-data Module = Module Identifier [Identifier] [ModuleItem] deriving Eq
+data Module = Module Identifier [Identifier] [ModuleItem]
+            | Primitive Identifier [Identifier] [ModuleItem] deriving Eq
 
 instance Show Module where
-  show (Module name ports items) = unlines
-    [ "module " ++ name ++ (if null ports then "" else "(" ++ commas ports ++ ")") ++ ";"
-    , unlines' $ map show items
-    , "endmodule"
-    ]
+  show a = case a of
+    (Module name ports items) -> show' "module" name ports items
+    (Primitive name ports items) -> show' "primitive" name ports items
+    where
+      show' kind name ports items = unlines
+        [ kind ++ " " ++ name ++ (if null ports then "" else "(" ++ commas ports ++ ")") ++ ";"
+        , unlines' $ map show items
+        , "end" ++ kind
+        ]
+
+data TableLine = TableLine [Char] (Maybe Char) Char deriving (Eq, Ord)
 
 data ModuleItem
   = Comment    String
@@ -44,11 +51,16 @@ data ModuleItem
   | Integer    [Identifier]
   | Initial    Stmt
   | Always     (Maybe Sense) Stmt
+  | Table      [TableLine]
   | Assign     LHS Expr
   | Instance   Identifier [PortBinding] Identifier [PortBinding]
   deriving Eq
 
 type PortBinding = (Identifier, Maybe Expr)
+
+instance Show TableLine where
+  show (TableLine inputs  Nothing     output) = printf "%s : %c;" (intersperse ' ' inputs) output
+  show (TableLine inputs (Just state) output) = printf "%s : %c : %c;" (intersperse ' ' inputs) state output
 
 instance Show ModuleItem where
   show a = case a of
@@ -68,6 +80,7 @@ instance Show ModuleItem where
     Instance   m params i ports
       | null params -> printf "%s %s %s;"     m                                  i (showPorts show ports)
       | otherwise   -> printf "%s #%s %s %s;" m (showPorts showExprConst params) i (showPorts show ports)
+    Table      ls   -> printf "table\n%s\nendtable" $ indent $ unlines' $ show <$> ls
     where
     showPorts :: (Expr -> String) -> [(Identifier, Maybe Expr)] -> String
     showPorts s ports = printf "(%s)" $ commas [ printf ".%s(%s)" i (if isJust arg then s $ fromJust arg else "") | (i, arg) <- ports ]

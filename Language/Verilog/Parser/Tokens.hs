@@ -74,9 +74,9 @@ data TokenName
   | KW_endgenerate 
   | KW_endgroup 
   | KW_endinterface 
-  | KW_endmodule 
+  | KW_endmodule
   | KW_endpackage 
-  | KW_endprimitive 
+  | KW_endprimitive
   | KW_endprogram 
   | KW_endproperty 
   | KW_endspecify 

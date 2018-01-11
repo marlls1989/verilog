@@ -57,30 +57,32 @@ $decimalDigit = [0-9]
 
 tokens :-
 
-  "always"           { tok KW_always     }
-  "assign"           { tok KW_assign     }
-  "begin"            { tok KW_begin      }
-  "case"             { tok KW_case       }
-  "default"          { tok KW_default    }
-  "else"             { tok KW_else       }
-  "end"              { tok KW_end        }
-  "endcase"          { tok KW_endcase    }
-  "endmodule"        { tok KW_endmodule  }
-  "for"              { tok KW_for        }
-  "if"               { tok KW_if         }
-  "initial"          { tok KW_initial    }
-  "inout"            { tok KW_inout      }
-  "input"            { tok KW_input      }
-  "integer"          { tok KW_integer    }
-  "localparam"       { tok KW_localparam }
-  "module"           { tok KW_module     }
-  "negedge"          { tok KW_negedge    }
-  "or"               { tok KW_or         }
-  "output"           { tok KW_output     }
-  "parameter"        { tok KW_parameter  }
-  "posedge"          { tok KW_posedge    }
-  "reg"              { tok KW_reg        }
-  "wire"             { tok KW_wire       }
+  "always"           { tok KW_always       }
+  "assign"           { tok KW_assign       }
+  "begin"            { tok KW_begin        }
+  "case"             { tok KW_case         }
+  "default"          { tok KW_default      }
+  "else"             { tok KW_else         }
+  "end"              { tok KW_end          }
+  "endcase"          { tok KW_endcase      }
+  "endmodule"        { tok KW_endmodule    }
+  "endprimitive"     { tok KW_endprimitive }
+  "for"              { tok KW_for          }
+  "if"               { tok KW_if           }
+  "initial"          { tok KW_initial      }
+  "inout"            { tok KW_inout        }
+  "input"            { tok KW_input        }
+  "integer"          { tok KW_integer      }
+  "localparam"       { tok KW_localparam   }
+  "module"           { tok KW_module       }
+  "primitive"        { tok KW_primitive    }
+  "negedge"          { tok KW_negedge      }
+  "or"               { tok KW_or           }
+  "output"           { tok KW_output       }
+  "parameter"        { tok KW_parameter    }
+  "posedge"          { tok KW_posedge      }
+  "reg"              { tok KW_reg          }
+  "wire"             { tok KW_wire         }
 
   @simpleIdentifier  { tok Id_simple  }
   @escapedIdentifier { tok Id_escaped }
