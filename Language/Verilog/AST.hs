@@ -9,6 +9,8 @@ module Language.Verilog.AST
   , BinOp      (..)
   , Sense      (..)
   , Call       (..)
+  , TableLine  (..)
+  , SpecifyItem (..)
   , PortBinding
   , Case
   , Range
@@ -24,20 +26,22 @@ import Data.BitVec
 type Identifier = String
 
 data Module = Module Identifier [Identifier] [ModuleItem]
+            | Cell Identifier [Identifier] [ModuleItem]
             | Primitive Identifier [Identifier] [ModuleItem] deriving Eq
 
 instance Show Module where
   show a = case a of
     (Module name ports items) -> show' "module" name ports items
     (Primitive name ports items) -> show' "primitive" name ports items
+    (Cell name ports items) -> "`celldefine\n" ++ show' "module" name ports items ++ "`endcelldefine\n"
     where
       show' kind name ports items = unlines
         [ kind ++ " " ++ name ++ (if null ports then "" else "(" ++ commas ports ++ ")") ++ ";"
         , unlines' $ map show items
-        , "end" ++ kind
-        ]
+        , "end" ++ kind]
 
 data TableLine = TableLine [Char] (Maybe Char) Char deriving (Eq, Ord)
+data SpecifyItem = PathDelay Identifier Identifier Float Float deriving (Eq, Ord)
 
 data ModuleItem
   = Comment    String
@@ -54,6 +58,7 @@ data ModuleItem
   | Table      [TableLine]
   | Assign     LHS Expr
   | Instance   Identifier [PortBinding] Identifier [PortBinding]
+  | Specify    [SpecifyItem]
   deriving Eq
 
 type PortBinding = (Identifier, Maybe Expr)
@@ -61,6 +66,9 @@ type PortBinding = (Identifier, Maybe Expr)
 instance Show TableLine where
   show (TableLine inputs  Nothing     output) = printf "%s : %c;" (intersperse ' ' inputs) output
   show (TableLine inputs (Just state) output) = printf "%s : %c : %c;" (intersperse ' ' inputs) state output
+
+instance Show SpecifyItem where
+  show (PathDelay src dst trise tfall) = printf "(%s => %s) = (%g, %g);" src dst trise tfall
 
 instance Show ModuleItem where
   show a = case a of
@@ -81,6 +89,7 @@ instance Show ModuleItem where
       | null params -> printf "%s %s %s;"     m                                  i (showPorts show ports)
       | otherwise   -> printf "%s #%s %s %s;" m (showPorts showExprConst params) i (showPorts show ports)
     Table      ls   -> printf "table\n%s\nendtable" $ indent $ unlines' $ show <$> ls
+    Specify    ls   -> printf "specify\n%s\nendspecify" $ indent $ unlines' $ show <$> ls
     where
     showPorts :: (Expr -> String) -> [(Identifier, Maybe Expr)] -> String
     showPorts s ports = printf "(%s)" $ commas [ printf ".%s(%s)" i (if isJust arg then s $ fromJust arg else "") | (i, arg) <- ports ]
