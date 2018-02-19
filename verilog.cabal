@@ -1,5 +1,5 @@
 name:    verilog
-version: 0.0.12
+version: 0.0.15
 
 category: Language, Hardware, Embedded
 
@@ -10,7 +10,7 @@ description:
   Intended for machine generated, synthesizable code.
 
 author:     Tom Hawkins <tomahawkins@gmail.com>
-maintainer: Tom Hawkins <tomahawkins@gmail.com>
+maintainer: Marcos Sartori <marcos.sartori@acad.pucrs.br>
 
 license:      BSD3
 license-file: LICENSE
@@ -43,5 +43,4 @@ library
 
 source-repository head
   type:     git
-  location: git://github.com/tomahawkins/verilog.git
-
+  location: git://github.com/marlls1989/verilog.git
