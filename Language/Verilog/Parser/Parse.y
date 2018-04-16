@@ -236,18 +236,19 @@ Sense1 :: { Sense }
 | "posedge" LHS { SensePosedge $2 }
 | "negedge" LHS { SenseNegedge $2 }
 
-Bindings :: { [(Identifier, Maybe Expr)] }
+Bindings :: { [(Maybe Identifier, Maybe Expr)] }
 : "(" Bindings1 ")" { $2 }
 
-Bindings1 :: { [(Identifier, Maybe Expr)] }
+Bindings1 :: { [(Maybe Identifier, Maybe Expr)] }
 :               Binding  { [$1] }
 | Bindings1 "," Binding  { $1 ++ [$3] }
 
-Binding :: { (Identifier, Maybe Expr) }
-: "." Identifier "(" MaybeExpr ")" { ($2, $4) }
-| "." Identifier                   { ($2, Just $ Ident $2) }
+Binding :: { (Maybe Identifier, Maybe Expr) }
+: "." Identifier "(" MaybeExpr ")" { (Just $ $2, $4) }
+| "." Identifier                   { (Just $ $2, Just $ Ident $2) }
+| MaybeExpr                        { (Nothing, $1) }
 
-ParameterBindings :: { [(Identifier, Maybe Expr)] }
+ParameterBindings :: { [(Maybe Identifier, Maybe Expr)] }
 :              { [] }
 | "#" Bindings { $2 }
 

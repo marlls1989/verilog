@@ -18,9 +18,8 @@ module Language.Verilog.AST
 
 import Data.Bits
 import Data.List
-import Data.Maybe
 import Text.Printf
-
+import Data.Maybe
 import Data.BitVec
 
 type Identifier = String
@@ -61,7 +60,7 @@ data ModuleItem
   | Specify    [SpecifyItem]
   deriving Eq
 
-type PortBinding = (Identifier, Maybe Expr)
+type PortBinding = (Maybe Identifier, Maybe Expr)
 
 instance Show TableLine where
   show (TableLine inputs  Nothing     output) = printf "%s : %c;" (intersperse ' ' inputs) output
@@ -91,8 +90,11 @@ instance Show ModuleItem where
     Table      ls   -> printf "table\n%s\nendtable" $ indent $ unlines' $ show <$> ls
     Specify    ls   -> printf "specify\n%s\nendspecify" $ indent $ unlines' $ show <$> ls
     where
-    showPorts :: (Expr -> String) -> [(Identifier, Maybe Expr)] -> String
-    showPorts s ports = printf "(%s)" $ commas [ printf ".%s(%s)" i (if isJust arg then s $ fromJust arg else "") | (i, arg) <- ports ]
+    showPorts :: (Expr -> String) -> [(Maybe Identifier, Maybe Expr)] -> String
+    showPorts s ports = printf "(%s)" $ commas [showPort i arg | (i, arg) <- ports ] where
+      showPort Nothing (Just arg) = printf "%s" $ s arg
+      showPort Nothing Nothing = ".*"
+      showPort (Just i) arg    = printf ".%s(%s)" i $ if isJust arg then s (fromJust arg) else ""
     showAssign :: Maybe Expr -> String
     showAssign a = case a of
       Nothing -> ""
