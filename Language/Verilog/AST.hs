@@ -234,6 +234,8 @@ instance Bits Expr where
   bit          = error "Not supported: bit"
   popCount     = error "Not supported: popCount"
 
+instance Semigroup Expr where
+  (<>) = mappend
 
 instance Monoid Expr where
   mempty      = 0

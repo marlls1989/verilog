@@ -39,6 +39,9 @@ instance Bits BitVec where
   isSigned _ = False
   popCount (BitVec _ v) = popCount v
 
+instance Semigroup BitVec where
+  (<>) = mappend
+
 instance Monoid BitVec where
   mempty = BitVec 0 0
   mappend (BitVec w1 v1) (BitVec w2 v2) = BitVec (w1 + w2) (shiftL v1 w2 .|. v2)
