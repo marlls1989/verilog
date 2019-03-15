@@ -21,6 +21,7 @@ import Data.List
 import Text.Printf
 import Data.Maybe
 import Data.BitVec
+import Data.Semigroup
 
 type Identifier = String
 

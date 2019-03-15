@@ -8,6 +8,7 @@ module Data.BitVec
   ) where
 
 import Data.Bits
+import Data.Semigroup
 
 data BitVec = BitVec Int Integer deriving (Show, Eq)
 
