@@ -1,7 +1,7 @@
 {
 module Language.Verilog.Parser.Parse (modules) where
 
-import Data.Bits
+import Data.Bits ((.|.) , shiftL)
 import Data.List
 
 import Data.BitVec

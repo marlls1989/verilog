@@ -1,7 +1,8 @@
 module Language.Verilog.Parser
-  ( parseFile
-  , preprocess
-  ) where
+  ( parseFile,
+    preprocess,
+  )
+where
 
 import Language.Verilog.AST
 import Language.Verilog.Parser.Lex
@@ -13,7 +14,6 @@ import Language.Verilog.Parser.Tokens
 parseFile :: [(String, String)] -> FilePath -> String -> [Module]
 parseFile env file content = modules tokens
   where
-  tokens = map relocate $ alexScanTokens $ preprocess env file content
-  relocate :: Token -> Token
-  relocate (Token t s (Position _ l c)) = Token t s $ Position file l c
-
+    tokens = map relocate $ alexScanTokens $ preprocess env file content
+    relocate :: Token -> Token
+    relocate (Token t s (Position _ l c)) = Token t s $ Position file l c
