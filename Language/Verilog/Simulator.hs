@@ -1,3 +1,7 @@
+-- NOTE: Dead code. This module is not listed in verilog.cabal's exposed-modules
+-- and does not compile: it imports the non-existent Language.Verilog.Netlist and
+-- Data.VCD. It is left over from upstream and is a candidate for removal; it is
+-- intentionally left undocumented.
 module Language.Verilog.Simulator
   ( Simulator
   , SimCommand  (..)

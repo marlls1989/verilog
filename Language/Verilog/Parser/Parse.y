@@ -1,4 +1,31 @@
 {
+{-|
+The Happy grammar for the supported (synthesisable) subset of Verilog.
+
+Generated into @Language.Verilog.Parser.Parse@ at build time; edit this @.y@
+source, not the generated @Parse.hs@. The single entry point 'modules' takes the
+token stream produced by the Alex lexer (see "Language.Verilog.Parser.Lex") and
+returns a list of 'Module's.
+
+Notes on the grammar that are easy to miss:
+
+* The @%expect 0@ pragma asserts the grammar has __zero__ shift\/reduce or
+  reduce\/reduce conflicts; if an edit introduces one, Happy will fail the build
+  rather than silently resolve it.
+
+* The classic dangling-@else@ ambiguity is resolved with an explicit precedence
+  trick: a low-precedence pseudo-token @NoElse@ is declared just below @"else"@,
+  and the else-less @if@ rule is tagged @%prec NoElse@ so an @else@ always binds
+  to the nearest @if@.
+
+* The expression operator table at the top mirrors Verilog's precedence and
+  associativity; @UPlus@\/@UMinus@ are pseudo-tokens giving unary @+@\/@-@ their
+  (high) precedence.
+
+The trailer below holds 'toNumber', the literal decoder that turns a lexed number
+token into a 'Data.BitVec.BitVec' (handling bare decimals and the sized\/based
+@'d@\/@'h@\/@'b@ forms).
+-}
 module Language.Verilog.Parser.Parse (modules) where
 
 import Data.Bits ((.|.) , shiftL)
@@ -13,6 +40,8 @@ import Language.Verilog.Parser.Tokens
 %tokentype { Token }
 %error { parseError }
 
+-- Assert the grammar is conflict-free: any new shift/reduce or reduce/reduce
+-- conflict makes Happy fail the build instead of silently resolving it.
 %expect 0
 
 %token
@@ -135,6 +164,10 @@ string             { Token Lit_string      _ _ }
 "<<<="             { Token Sym_lt_lt_lt_eq _ _ }
 ">>>="             { Token Sym_gt_gt_gt_eq _ _ }
 
+-- Precedence/associativity, lowest first. NoElse is a pseudo-token sitting just
+-- below "else" so the dangling-else ambiguity resolves to the nearest if
+-- (the else-less if rule is tagged %prec NoElse below). UPlus/UMinus give unary
+-- +/- their high precedence.
 %nonassoc NoElse
 %nonassoc "else"
 %right "?" ":"
@@ -263,6 +296,7 @@ Stmt :: { Stmt }
 | "reg" MaybeRange RegDeclarations ";"             { StmtReg $2 $3      }
 | "integer" Identifiers ";"                        { StmtInteger $2     }
 | "if" "(" Expr ")" Stmt "else" Stmt               { If $3 $5 $7        }
+-- else-less if: %prec NoElse makes a trailing else attach to the nearest if
 | "if" "(" Expr ")" Stmt %prec NoElse              { If $3 $5 Null      }
 | "for" "(" Identifier "=" Expr ";" Expr ";" Identifier "=" Expr ")" Stmt { For ($3, $5) $7 ($9, $11) $13 }
 | LHS "=" Expr ";"                                 { BlockingAssignment $1 $3 }
@@ -339,14 +373,27 @@ Expr :: { Expr }
 | "-" Expr %prec UMinus       { UniOp USub $2 }
 
 {
+-- | The Happy error handler: called with the remaining token stream when no rule
+-- applies. Aborts with an 'error' naming the offending token and its source
+-- position (the parser does not recover).
 parseError :: [Token] -> a
 parseError a = case a of
   []              -> error "Parse error: no tokens left to parse."
   Token t s p : _ -> error $ "Parse error: unexpected token '" ++ s ++ "' (" ++ show t ++ ") at " ++ show p ++ "."
 
+-- | Strips the surrounding double quotes from a lexed string-literal token.
 toString :: Token -> String
 toString = tail . init . tokenString
 
+-- | Decodes a lexed number token into a 'BitVec'. Three forms are recognised:
+--
+-- * a bare decimal (all digits) — width inferred by 'Data.BitVec.fromInteger';
+-- * a based literal with no size, e.g. @'hff@ (leading quote) — width inferred;
+-- * a sized based literal, e.g. @8'hff@ — width taken from the prefix before the
+--   quote, value parsed from the base suffix.
+--
+-- The base suffix @'d@\/@'h@\/@'b@ selects decimal\/hex\/binary parsing.
+-- Unrecognised forms abort with 'error'. Octal (@'o@) is /not/ handled here.
 toNumber :: Token -> BitVec
 toNumber = number . tokenString
   where
@@ -359,7 +406,8 @@ toNumber = number . tokenString
     where
     w = takeWhile (/= '\'') a
     b = dropWhile (/= '\'') a
-    f a 
+    -- Decode the value from a based literal (the part from the quote onwards).
+    f a
       | isPrefixOf "'d" a = read $ drop 2 a
       | isPrefixOf "'h" a = read $ "0x" ++ drop 2 a
       | isPrefixOf "'b" a = foldl (\ n b -> shiftL n 1 .|. (if b == '1' then 1 else 0)) 0 (drop 2 a)
