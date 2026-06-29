@@ -14,7 +14,9 @@ class ToVerilogModule a where
   toVerilogModuleList :: a -> [Module]
   toVerilogModuleList a = toVerilogModule a : []
   toVerilogModule :: a -> Module
-  toVerilogModule = head . toVerilogModuleList
+  toVerilogModule a = case toVerilogModuleList a of
+    (m : _) -> m
+    []      -> error "toVerilogModule: empty module list"
 
 class ToVerilogExpression a where
   toVerilogExpression :: a -> Expr

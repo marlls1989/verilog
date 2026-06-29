@@ -41,11 +41,10 @@ instance Bits BitVec where
   popCount (BitVec _ v) = popCount v
 
 instance Semigroup BitVec where
-  (<>) = mappend
+  BitVec w1 v1 <> BitVec w2 v2 = BitVec (w1 + w2) (shiftL v1 w2 .|. v2)
 
 instance Monoid BitVec where
   mempty = BitVec 0 0
-  mappend (BitVec w1 v1) (BitVec w2 v2) = BitVec (w1 + w2) (shiftL v1 w2 .|. v2)
 
 -- | BitVec construction, given width and value.
 bitVec :: Int -> Integer -> BitVec

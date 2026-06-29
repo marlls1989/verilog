@@ -257,11 +257,10 @@ instance Bits Expr where
   popCount = error "Not supported: popCount"
 
 instance Semigroup Expr where
-  (<>) = mappend
+  a <> b = Concat [a, b]
 
 instance Monoid Expr where
   mempty = 0
-  mappend a b = mconcat [a, b]
   mconcat = Concat
 
 data LHS

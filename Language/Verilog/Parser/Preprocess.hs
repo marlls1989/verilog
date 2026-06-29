@@ -52,12 +52,12 @@ preprocess env file content = unlines $ pp True [] env $ lines $ uncomment file 
     "`define" : name : value -> "" : pp on stack (if on then (name, ppLine env $ unwords value) : env else env) rest
     "`ifdef"  : name : _     -> "" : pp (on && (elem    name $ fst $ unzip env)) (on : stack) env rest 
     "`ifndef" : name : _     -> "" : pp (on && (notElem name $ fst $ unzip env)) (on : stack) env rest 
-    "`else" : _
-      | not $ null stack     -> "" : pp (head stack && not on) stack env rest
-      | otherwise            -> error $ "`else  without associated `ifdef/`ifndef: " ++ file
-    "`endif" : _
-      | not $ null stack     -> "" : pp (head stack) (tail stack) env rest
-      | otherwise            -> error $ "`endif  without associated `ifdef/`ifndef: " ++ file
+    "`else" : _ -> case stack of
+      (s : _)                -> "" : pp (s && not on) stack env rest
+      []                     -> error $ "`else  without associated `ifdef/`ifndef: " ++ file
+    "`endif" : _ -> case stack of
+      (s : ss)               -> "" : pp s ss env rest
+      []                     -> error $ "`endif  without associated `ifdef/`ifndef: " ++ file
     _                        -> (if on then ppLine env a else "") : pp on stack env rest
 
 ppLine :: [(String, String)] -> String -> String
