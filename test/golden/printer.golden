@@ -1,0 +1,28 @@
+module m(d, y);
+input  [7:0] d;
+output y;
+endmodule
+primitive p_udp(Q, A, B);
+output Q;
+input  A, B;
+reg    Q;
+table
+	0 ? : ? : 0;
+	1 1 : ? : 1;
+endtable
+endprimitive
+`celldefine
+module the_cell(Q, A);
+output Q;
+input  A;
+specify
+	(A => Q) = (0.1, 0.1);
+endspecify
+endmodule
+`endcelldefine
+input  [7:0] d;output y;wire   w;assign y = (a & (~ b));inv i0 (.a(a), .y(y));table
+	0 0 ? : ? : 0;
+	1 1 : 1;
+endtablespecify
+	(A => Q) = (0.1, 0.1);
+endspecify
