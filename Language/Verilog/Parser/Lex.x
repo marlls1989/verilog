@@ -1,5 +1,19 @@
 {
 {-# OPTIONS_GHC -w #-}
+{-|
+The Alex lexer for the supported Verilog subset.
+
+Generated into @Language.Verilog.Parser.Lex@ at build time; edit this @.x@
+source, not the generated @Lex.hs@. 'alexScanTokens' turns preprocessed source
+text into a list of 'Token's for the grammar
+("Language.Verilog.Parser.Parse"). The @posn@ wrapper attaches source positions;
+the file name is filled in later by @parseFile@ (the lexer leaves it blank).
+
+The macro definitions below describe number, string, and identifier shapes; the
+rule section maps keywords, symbols, and those classes to 'TokenName's. Only the
+synthesisable subset is lexed — the long symbol table mirrors what the grammar
+can consume.
+-}
 module Language.Verilog.Parser.Lex
   ( alexScanTokens
   ) where
@@ -183,6 +197,9 @@ tokens :-
   .                  { tok Unknown }
 
 {
+-- | Token-action helper used by every rule: wraps the matched lexeme and its
+-- Alex position into a 'Token'. The file name is left empty ("") here and
+-- rewritten by @parseFile@.
 tok :: TokenName -> AlexPosn -> String -> Token
 tok t (AlexPn _ l c) s = Token t s $ Position "" l c
 }

@@ -1,3 +1,13 @@
+{-|
+The token vocabulary shared by the lexer ("Language.Verilog.Parser.Lex") and the
+grammar ("Language.Verilog.Parser.Parse").
+
+A 'Token' bundles a 'TokenName' tag, the matched source text, and a source
+'Position'. 'TokenName' enumerates the /full/ SystemVerilog keyword and symbol
+set; the lexer and grammar only implement a synthesisable subset, so many
+constructors here are never produced or consumed — they exist to make the
+vocabulary complete and to ease future extension.
+-}
 module Language.Verilog.Parser.Tokens
   ( Token (..),
     TokenName (..),
@@ -8,16 +18,23 @@ where
 
 import Text.Printf (printf)
 
+-- | The matched source text carried by a token.
 tokenString :: Token -> String
 tokenString (Token _ s _) = s
 
+-- | A source location: @Position file line column@.
 data Position = Position String Int Int deriving (Eq)
 
+-- | Renders a position as @file:line:column@.
 instance Show Position where
   show (Position f l c) = printf "%s:%d:%d" f l c
 
+-- | A lexical token: its kind, the matched lexeme, and where it came from.
 data Token = Token TokenName String Position deriving (Show, Eq)
 
+-- | The token kind. NOTE: this enumerates the full SystemVerilog keyword and
+-- symbol set, but the lexer and grammar implement only a synthesisable subset;
+-- many constructors are never emitted or matched.
 data TokenName
   = KW_alias
   | KW_always

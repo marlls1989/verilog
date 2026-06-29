@@ -1,9 +1,29 @@
+{-|
+The Verilog source preprocessor: comment stripping and a minimal compiler-
+directive (@\`define@ family) pass.
+
+'preprocess' is the first stage of the parse pipeline (see
+"Language.Verilog.Parser"): it runs before the lexer. It first strips comments
+with 'uncomment', then walks the result line by line handling
+@\`define@\/@\`ifdef@\/@\`ifndef@\/@\`else@\/@\`endif@ and expanding macro uses.
+Only this small directive set is understood; anything else (e.g. @\`timescale@)
+is left in place and will be rejected downstream — see the limitation test in
+@test\/Spec.hs@.
+
+Comment and directive lines are replaced by blank lines rather than removed, so
+source line numbers are preserved for error reporting.
+-}
 module Language.Verilog.Parser.Preprocess
   ( uncomment
   , preprocess
   ) where
 
--- | Remove comments from code.
+-- | Strip @\/\/@ and @\/* … *\/@ comments, replacing comment characters with
+-- spaces (and keeping newlines\/tabs) so column and line positions are
+-- preserved. A small state machine tracks whether it is in code, a line comment,
+-- a block comment, or a string literal — string contents (which may contain
+-- comment-like characters or escaped quotes) are left untouched. An unterminated
+-- block comment or string aborts with 'error', naming the file.
 uncomment :: FilePath -> String -> String
 uncomment file a = uncomment a
   where
@@ -42,7 +62,16 @@ uncomment file a = uncomment a
     '\\' : '"' : rest -> "\\\"" ++ ignoreString rest
     a : rest          -> a : ignoreString rest
 
--- | A simple `define preprocessor.  
+-- | Apply the @\`define@-family directives after 'uncomment'ing the source.
+--
+-- The first argument seeds the macro environment (name\/replacement pairs), as
+-- passed through from @parseFile@. The worker @pp@ threads two pieces of state:
+-- @on@, whether the current line is inside an active conditional branch, and a
+-- @stack@ of the enclosing branches' @on@ flags so @\`else@\/@\`endif@ can
+-- restore the parent state. @\`ifdef@\/@\`ifndef@ test macro membership;
+-- @\`define@ extends the environment (only when active). Active lines have their
+-- macro uses expanded by 'ppLine'; inactive lines and directive lines become
+-- blank. Unbalanced @\`else@\/@\`endif@ abort with 'error'.
 preprocess :: [(String, String)] -> FilePath -> String -> String
 preprocess env file content = unlines $ pp True [] env $ lines $ uncomment file content
   where
@@ -60,6 +89,9 @@ preprocess env file content = unlines $ pp True [] env $ lines $ uncomment file 
       []                     -> error $ "`endif  without associated `ifdef/`ifndef: " ++ file
     _                        -> (if on then ppLine env a else "") : pp on stack env rest
 
+-- | Expand macro uses within a single line. A @\`@ followed by an identifier is
+-- looked up in the environment and replaced by its value; the rest of the line is
+-- scanned recursively. An unknown macro aborts with 'error'.
 ppLine :: [(String, String)] -> String -> String
 ppLine _ "" = ""
 ppLine env ('`' : a) = case lookup name env of
